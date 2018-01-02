@@ -100,26 +100,9 @@ function! s:_start() dict abort
     if mapping !=# ''
         execute 'nnoremap <buffer><silent>' . mapping . ' :<C-u>call ghpr_blame#show_pr_here()<CR>'
     endif
+    let self.pr_preview = ghpr_blame#preview#create()
 endfunction
 let s:GHPR.start = function('s:_start')
-
-function! s:move_to_preview() abort
-    if &l:previewwindow
-        return
-    endif
-    let winnr = winnr()
-    try
-        wincmd P
-    catch /^Vim\%((\a\+)\)\=:E441/
-        if winwidth(0) >= 160
-            let split = 'vnew'
-        else
-            let split = 'new'
-        endif
-        execute 'botright' split
-        setlocal previewwindow bufhidden=delete nobackup noswf nobuflisted buftype=nofile filetype=markdown
-    endtry
-endfunction
 
 function! s:_show_pr_at(line) dict abort
     let idx = a:line - 1
@@ -129,20 +112,19 @@ function! s:_show_pr_at(line) dict abort
     endif
 
     let num = self.blames[idx].pr
-    if exists('b:ghpr_pr_num') && b:ghpr_pr_num == num
-        return
-    endif
-
     if !has_key(self.pr_cache, num)
+        echo 'Fetching pull request #' . num . '...'
         let pr = self.fetch_pr(num)
         let self.pr_cache[num] = pr
     else
         let pr = self.pr_cache[num]
     endif
 
-    call s:move_to_preview()
+    let moved = self.pr_preview.enter()
     call self.render_pr(pr)
-    wincmd p
+    if moved
+        wincmd p
+    endif
 endfunction
 let s:GHPR.show_pr_at = function('s:_show_pr_at')
 
@@ -202,14 +184,8 @@ function! s:on_cursor_moved() abort
 endfunction
 
 function! s:_quit() dict abort
-    try
-        wincmd P
-        close
-    catch /^Vim\%((\a\+)\)\=:E441/
-    endtry
-
+    call self.pr_preview.close()
     autocmd! plugin-ghpr-blame
-
     let mapping = get(g:, 'ghpr_show_pr_mapping', '<CR>')
     if mapping !=# ''
         try
