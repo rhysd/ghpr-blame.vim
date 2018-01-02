@@ -26,16 +26,22 @@ endfunction
 
 function! ghpr_blame#start() abort
     if exists('b:ghpr')
-        return
+        call b:ghpr.quit()
     endif
     let b:ghpr = ghpr_blame#app#new(expand('%:p'))
     call b:ghpr.start()
 endfunction
 
 function! ghpr_blame#quit() abort
+    if exists('b:ghpr_bufnr')
+        let w = bufwinnr(b:ghpr_bufnr)
+        if w != -1
+            execute w . 'wincmd w'
+        endif
+    endif
     if !exists('b:ghpr')
         return
     endif
     call b:ghpr.quit()
-    unlet b:ghpr
+    unlet! b:ghpr
 endfunction

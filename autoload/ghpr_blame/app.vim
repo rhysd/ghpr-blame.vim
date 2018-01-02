@@ -24,6 +24,7 @@ function! ghpr_blame#app#new(fname) abort
     let ghpr.host = 'github.com'
     let ghpr.pr_cache = {}
     let ghpr.started = v:false
+    let ghpr.bufnr = bufnr('%')
     return ghpr
 endfunction
 
@@ -99,7 +100,9 @@ function! s:_start() dict abort
     let self.prev_line = line('.')
     augroup plugin-ghpr-blame
         autocmd!
-        autocmd CursorMoved <buffer> call <SID>on_cursor_moved()
+        if get(g:, 'ghpr_show_pr_in_message', 0)
+            autocmd CursorMoved <buffer> call <SID>on_cursor_moved()
+        endif
         autocmd BufEnter <buffer> call <SID>on_buf_enter()
     augroup END
     let mapping = get(g:, 'ghpr_show_pr_mapping', '<CR>')
@@ -170,6 +173,7 @@ let s:GHPR.fetch_pr = function('s:_fetch_pr')
 
 function! s:_render_pr(pr) dict abort
     let b:ghpr_pr_num = a:pr.number
+    let b:ghpr_bufnr = self.bufnr
     silent %delete _
     let lines = [
     \   a:pr.number . ': ' . a:pr.title,
@@ -188,6 +192,7 @@ endfunction
 let s:GHPR.render_pr = function('s:_render_pr')
 
 function! s:_render_pr_nums(lnum) dict abort
+    let b:ghpr_bufnr = self.bufnr
     let numbers = []
     let max_num = -1
     for b in self.blames
@@ -200,6 +205,9 @@ function! s:_render_pr_nums(lnum) dict abort
             let numbers += ['']
         endif
     endfor
+    augroup plugin-ghpr-blame
+        autocmd BufUnload <buffer> call ghpr_blame#quit()
+    augroup END
     if max_num == -1
         return 0
     endif
