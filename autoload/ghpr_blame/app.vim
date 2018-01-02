@@ -27,10 +27,14 @@ function! ghpr_blame#app#new(fname) abort
     return ghpr
 endfunction
 
-function! s:_git(...) dict abort
+function! s:_build_git_cmd(args) dict abort
     let opts = join(map(copy(a:000), 's:shellescape(v:val)'), ' ')
-    let cmd = 'cd ' . s:shellescape(self.dir) . ' && git ' . opts
-    let out = system(cmd)
+    return 'cd ' . s:shellescape(self.dir) . ' && git ' . opts
+endfunction
+let s:GHPR.build_git_cmd = function('s:_build_git_cmd')
+
+function! s:_git(...) dict abort
+    let out = system(self.build_git_cmd(a:000))
     if v:shell_error
         call ghpr_blame#throw(printf("Git command '%s' failed: %s", cmd, out))
     endif
