@@ -28,13 +28,14 @@ function! ghpr_blame#app#new(fname) abort
 endfunction
 
 function! s:_build_git_cmd(args) dict abort
-    let opts = join(map(copy(a:000), 's:shellescape(v:val)'), ' ')
+    let opts = join(map(copy(a:args), 's:shellescape(v:val)'), ' ')
     return 'cd ' . s:shellescape(self.dir) . ' && git ' . opts
 endfunction
 let s:GHPR.build_git_cmd = function('s:_build_git_cmd')
 
 function! s:_git(...) dict abort
-    let out = system(self.build_git_cmd(a:000))
+    let cmd = self.build_git_cmd(a:000)
+    let out = system(cmd)
     if v:shell_error
         call ghpr_blame#throw(printf("Git command '%s' failed: %s", cmd, out))
     endif
@@ -104,6 +105,8 @@ function! s:_start() dict abort
     if mapping !=# ''
         execute 'nnoremap <buffer><silent>' . mapping . ' :<C-u>call ghpr_blame#show_pr_here()<CR>'
     endif
+    " TEMPORARY
+    call ghpr_blame#show_pr_here()
 endfunction
 let s:GHPR.start = function('s:_start')
 
@@ -133,20 +136,19 @@ function! s:_show_pr_at(line) dict abort
     endif
 
     let num = self.blames[idx].pr
-    if exists('b:ghpr_pr_num') && b:ghpr_pr_num == num
+    " if exists('b:ghpr_pr_num') && b:ghpr_pr_num == num
+    "     return
+    " endif
+
+    if has_key(self.pr_cache, num)
+        call self.render_pr(self.pr_cache[num])
         return
     endif
 
-    if !has_key(self.pr_cache, num)
-        let pr = self.fetch_pr(num)
-        let self.pr_cache[num] = pr
-    else
-        let pr = self.pr_cache[num]
-    endif
-
-    call s:move_to_preview()
-    call self.render_pr(pr)
-    wincmd p
+    let this = self
+    return self.fetch_pr(num)
+        \.then({pr -> this.render_pr(pr)})
+        \.catch({x -> ghpr_blame#error('Failed to fetch PR: ' . string(x))})
 endfunction
 let s:GHPR.show_pr_at = function('s:_show_pr_at')
 
@@ -156,21 +158,17 @@ function! s:_fetch_pr(num) dict abort
         let headers.Authorization = 'token ' . g:ghpr_github_auth_token
     endif
     let url = printf('https://api.%s/repos/%s/pulls/%d', self.host, self.slug, a:num)
-    let response = s:H.request({
+    return s:H.request({
         \ 'url' : url,
         \ 'headers' : headers,
         \ 'method' : 'GET',
         \ 'client' : ['curl', 'wget'],
-        \ })
-    if !response.success
-        call ghpr_blame#error(printf('API request failed with status %s: %s', response.status, response, statusText))
-        return {}
-    endif
-    return json_decode(response.content)
+        \ }).then({res -> json_decode(res.content)})
 endfunction
 let s:GHPR.fetch_pr = function('s:_fetch_pr')
 
 function! s:_render_pr(pr) dict abort
+    call s:move_to_preview()
     let b:ghpr_pr_num = a:pr.number
     silent %delete _
     let lines = [
@@ -185,6 +183,8 @@ function! s:_render_pr(pr) dict abort
     let lines += split(a:pr.body, "\n")
     call append(0, lines)
     normal! gg0
+    let self.pr_cache[a:pr.number] = a:pr
+    wincmd p
 endfunction
 let s:GHPR.render_pr = function('s:_render_pr')
 

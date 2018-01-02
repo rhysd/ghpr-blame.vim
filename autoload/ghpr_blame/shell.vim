@@ -2,7 +2,6 @@ let s:P = ghpr_blame#vital().import('Async.Promise')
 
 let s:JOB = {}
 function! s:_on_close(channel) dict abort
-    echo 'CLOSE!'
     for part in ['out', 'err']
         let buf = []
         while ch_status(a:channel, {'part' : part}) ==# 'buffered'
@@ -15,7 +14,6 @@ endfunction
 let s:JOB.on_close = function('s:_on_close')
 
 function! s:_on_exit(_, status) dict abort
-    echo 'EXIT!'
     let self.exit_code = a:status
     call self.on_finish()
 endfunction
@@ -26,7 +24,7 @@ function! s:_on_finish() dict abort
         return
     endif
     if self.exit_code != 0
-        call self.reject(self.stderr)
+        call self.reject([self.stderr, self.exit_code])
     else
         call self.resolve(self.stdout)
     endif
@@ -35,7 +33,6 @@ let s:JOB.on_finish = function('s:_on_finish')
 
 function! ghpr_blame#shell#start(cmd) abort
     let j = deepcopy(s:JOB)
-    echo j
     return s:P.new({resolve, reject ->
     \   extend(j, {
     \     'raw' : job_start(a:cmd, {
