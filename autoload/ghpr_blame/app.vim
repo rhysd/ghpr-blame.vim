@@ -56,9 +56,15 @@ function! s:_blame() dict abort
     let lines = split(self.git('blame', '--first-parent', '--line-porcelain', self.file), "\n")
     let blames = []
     for line in lines
-        let m = matchlist(line, '^\(\x\+\) \d\+ \d\+ \d\+$')
+        let m = matchlist(line, '^\(\x\+\) \d\+ \(\d\+\) \d\+$')
         if len(m) > 0
             let hash = m[1]
+            let lnum = str2nr(m[2])
+            let delta = (lnum - 1) - len(blames)
+            while delta > 0
+                let blames += [current]
+                let delta -= 1
+            endwhile
             let current = {'hash' : hash}
             let blames += [current]
             continue
@@ -90,17 +96,31 @@ function! s:_start() dict abort
 
     let blames = self.blame()
     let self.blames = blames
-    let self.started = v:true
     let self.prev_line = line('.')
     augroup plugin-ghpr-blame
         autocmd!
         autocmd CursorMoved <buffer> call <SID>on_cursor_moved()
+        autocmd BufEnter <buffer> call <SID>on_buf_enter()
     augroup END
     let mapping = get(g:, 'ghpr_show_pr_mapping', '<CR>')
     if mapping !=# ''
         execute 'nnoremap <buffer><silent>' . mapping . ' :<C-u>call ghpr_blame#show_pr_here()<CR>'
     endif
+
+    let l = line('.')
+    let self.pr_numbers = ghpr_blame#preview#create()
+    let self.old_scrollbind = &l:scrollbind
+    setlocal scrollbind
+    call self.pr_numbers.open('leftabove vnew')
+    let self.nums_win_width = self.render_pr_nums(l)
+    wincmd p
+    if l != line('.')
+        execute l
+    endif
+    syncbind
+
     let self.pr_preview = ghpr_blame#preview#create()
+    let self.started = v:true
 endfunction
 let s:GHPR.start = function('s:_start')
 
@@ -162,9 +182,36 @@ function! s:_render_pr(pr) dict abort
     \ ]
     let lines += split(a:pr.body, "\n")
     call append(0, lines)
+    setlocal filetype=markdown
     normal! gg0
 endfunction
 let s:GHPR.render_pr = function('s:_render_pr')
+
+function! s:_render_pr_nums(lnum) dict abort
+    let numbers = []
+    let max_num = -1
+    for b in self.blames
+        if has_key(b, 'pr')
+            let numbers += ['#' . b.pr]
+            if b.pr > max_num
+                let max_num = b.pr
+            endif
+        else
+            let numbers += ['']
+        endif
+    endfor
+    if max_num == -1
+        return 0
+    endif
+    call append(0, numbers)
+    setlocal nowrap
+    let width = float2nr(log10(max_num)) + 3
+    execute 'vertical' 'resize' width
+    execute a:lnum
+    setlocal scrollbind
+    return width
+endfunction
+let s:GHPR.render_pr_nums = function('s:_render_pr_nums')
 
 function! s:on_cursor_moved() abort
     if !exists('b:ghpr') || !b:ghpr.started
@@ -183,8 +230,29 @@ function! s:on_cursor_moved() abort
     endif
 endfunction
 
+function! s:on_buf_enter() abort
+    if !exists('b:ghpr') || !b:ghpr.started
+        return
+    endif
+    let winnr = b:ghpr.pr_numbers.winnr()
+    if winnr == -1
+        return
+    endif
+    let width = b:ghpr.nums_win_width
+    if winwidth(winnr) == width
+        return
+    endif
+    let moved = b:ghpr.pr_numbers.enter()
+    execute 'vertical' 'resize' width
+    if moved
+        wincmd p
+    endif
+endfunction
+
 function! s:_quit() dict abort
     call self.pr_preview.close()
+    call self.pr_numbers.close()
+    let &l:scrollbind = self.old_scrollbind
     autocmd! plugin-ghpr-blame
     let mapping = get(g:, 'ghpr_show_pr_mapping', '<CR>')
     if mapping !=# ''

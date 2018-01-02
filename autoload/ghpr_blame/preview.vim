@@ -4,14 +4,21 @@ function! ghpr_blame#preview#create() abort
     return deepcopy(s:PREVIEW)
 endfunction
 
-function! s:_open() dict abort
-    if winwidth(0) >= 160
-        let split = 'vnew'
+function! s:_winnr() dict abort
+    return bufwinnr(self.bufnr)
+endfunction
+let s:PREVIEW.winnr = function('s:_winnr')
+
+function! s:_open(...) dict abort
+    if a:0 > 0
+        let split = a:1
+    elseif winwidth(0) >= 160
+        let split = 'botright vnew'
     else
-        let split = 'new'
+        let split = 'botright new'
     endif
-    execute 'botright' split
-    setlocal previewwindow bufhidden=delete nobackup noswf nobuflisted buftype=nofile filetype=markdown
+    execute split
+    setlocal bufhidden=delete nobackup noswf nobuflisted buftype=nofile nonumber
     let self.bufnr = bufnr('%')
 endfunction
 let s:PREVIEW.open = function('s:_open')
