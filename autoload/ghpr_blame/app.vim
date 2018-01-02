@@ -184,7 +184,7 @@ function! s:_render_pr(pr) dict abort
     \   '-----------',
     \   '',
     \ ]
-    let lines += split(a:pr.body, "\n")
+    let lines += split(substitute(a:pr.body, "\r", '', 'g'), "\n")
     call append(0, lines)
     setlocal filetype=markdown
     normal! gg0
