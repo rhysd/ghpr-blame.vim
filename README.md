@@ -19,10 +19,10 @@ for the detail).
 
 You can know which line is modified by which pull request by seeing the list.
 
-### 2. Type enter key to know the detail of the pull request
+### 2. Type enter key to know the details of the pull request
 
 When `:GHPRBlame`, it automatically defines a buffer local mapping for inspecting the pull request
-for the current line. If you want to know the detail of the current line, please type `<CR>` (it can
+for the current line. If you want to know the details of the current line, please type `<CR>` (it can
 be customized by `g:ghpr_show_pr_mapping`). It creates another temporary window and show the detail
 of the pull request in it.
 
@@ -33,8 +33,10 @@ explicitly. It cleans up the cache for fetching pull requests and `git-blame`.
 
 ## Setup API Token
 
-To fetch the information of pull request, this plugin uses [GitHub PullRequest API][]. It may hit
+To fetch the details of pull request, this plugin uses [GitHub PullRequest API][]. It may hit
 API rate limit when using this plugin heavily.
+
+Please generate and set an API token by below steps.
 
 1. Visit https://github.com/settings/tokens in a browser
 2. Click 'Generate new token'
@@ -45,26 +47,28 @@ API rate limit when using this plugin heavily.
 
 ## License
 
-  the MIT License
+```
+the MIT License
 
-  Copyright (c) 2017 rhysd
+Copyright (c) 2017 rhysd
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-  of the Software, and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-  PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
-  THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+```
 
 [ghpr-blame.vim]: https://bithub.com/rhysd/ghpr-blame.vim
 [GitHub PullRequest API]: https://developer.github.com/v3/pulls/
