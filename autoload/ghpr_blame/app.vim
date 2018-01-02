@@ -44,7 +44,7 @@ function! s:_extract_slug() dict abort
     let host = escape(self.host, '.')
     let m = matchlist(out, printf('^git@%s:\([^/]\+/[^/]\+\)\.git\n$', host))
     if empty(m)
-        let m = matchlist(out, printf('^https://%s/\([^/]\+/[^/]\+\)\.git\n$', host))
+        let m = matchlist(out, printf('^https://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\)\.git\n$', host))
     endif
     if empty(m)
         return ''
