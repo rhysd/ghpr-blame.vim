@@ -47,6 +47,9 @@ function! s:_extract_slug() dict abort
         let m = matchlist(out, printf('^https://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\)\.git\n$', host))
     endif
     if empty(m)
+        let m = matchlist(out, printf('^ssh://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\)\n$', host))
+    endif
+    if empty(m)
         return ''
     endif
     return m[1]
