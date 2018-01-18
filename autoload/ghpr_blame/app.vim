@@ -167,7 +167,7 @@ function! s:_fetch_pr(num) dict abort
         \ 'client' : ['curl', 'wget'],
         \ })
     if !response.success
-        call ghpr_blame#error(printf('API request failed with status %s: %s', response.status, response, statusText))
+        call ghpr_blame#error(printf('API request failed with status %s: %s', response.status, response))
         return {}
     endif
     return json_decode(response.content)
