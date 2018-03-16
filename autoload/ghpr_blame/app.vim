@@ -42,12 +42,9 @@ let s:GHPR.git = function('s:_git')
 function! s:_extract_slug() dict abort
     let out = self.git('config', '--get', 'remote.origin.url')
     let host = escape(self.host, '.')
-    let m = matchlist(out, printf('^git@%s:\([^/]\+/[^/]\+\)\.git\n$', host))
+    let m = matchlist(out, printf('^git@%s:\([^/]\+/[^/]\+\%%(\.git\)\?\)\n$', host))
     if empty(m)
-        let m = matchlist(out, printf('^https://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\)\.git\n$', host))
-    endif
-    if empty(m)
-        let m = matchlist(out, printf('^ssh://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\)\n$', host))
+        let m = matchlist(out, printf('^\%%(git\|https\|ssh\)://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\%%(\.git\)\?\)\n$', host))
     endif
     if empty(m)
         return ''
