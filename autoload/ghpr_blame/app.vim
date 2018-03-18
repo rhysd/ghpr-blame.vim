@@ -1,5 +1,3 @@
-let s:H = ghpr_blame#vital().import('Web.HTTP')
-
 let s:is_windows = has('win32') || has('win64')
 if s:is_windows
   function! s:shellescape(...) abort
@@ -20,8 +18,6 @@ function! ghpr_blame#app#new(fname) abort
     let ghpr = deepcopy(s:GHPR)
     let ghpr.file = a:fname
     let ghpr.dir = fnamemodify(a:fname, ':p:h')
-    " TODO: GHE support
-    let ghpr.host = 'github.com'
     let ghpr.pr_cache = {}
     let ghpr.started = v:false
     let ghpr.bufnr = bufnr('%')
@@ -41,15 +37,7 @@ let s:GHPR.git = function('s:_git')
 
 function! s:_extract_slug() dict abort
     let out = self.git('config', '--get', 'remote.origin.url')
-    let host = escape(self.host, '.')
-    let m = matchlist(out, printf('^git@%s:\([^/]\+/[^/]\+\%%(\.git\)\?\)\n$', host))
-    if empty(m)
-        let m = matchlist(out, printf('^\%%(git\|https\|ssh\)://\%%([^@/]\+@\)\?%s/\([^/]\+/[^/]\+\%%(\.git\)\?\)\n$', host))
-    endif
-    if empty(m)
-        return ''
-    endif
-    return m[1]
+    return ghpr_blame#slug#from_url(out)
 endfunction
 let s:GHPR.extract_slug = function('s:_extract_slug')
 
@@ -89,7 +77,7 @@ function! s:_start() dict abort
     endif
 
     let slug = self.extract_slug()
-    if slug ==# ''
+    if !slug.is_valid
         call ghpr_blame#warn('Cannot get GitHub repository from')
         return
     endif
@@ -137,7 +125,7 @@ function! s:_show_pr_at(line) dict abort
     let num = self.blames[idx].pr
     if !has_key(self.pr_cache, num)
         echo 'Fetching pull request #' . num . '...'
-        let pr = self.fetch_pr(num)
+        let pr = self.slug.fetch_pr(num)
         let self.pr_cache[num] = pr
     else
         let pr = self.pr_cache[num]
@@ -150,26 +138,6 @@ function! s:_show_pr_at(line) dict abort
     endif
 endfunction
 let s:GHPR.show_pr_at = function('s:_show_pr_at')
-
-function! s:_fetch_pr(num) dict abort
-    let headers = {'Accept' : 'application/vnd.github.v3+json'}
-    if get(g:, 'ghpr_github_auth_token', '') !=# ''
-        let headers.Authorization = 'token ' . g:ghpr_github_auth_token
-    endif
-    let url = printf('https://api.%s/repos/%s/pulls/%d', self.host, self.slug, a:num)
-    let response = s:H.request({
-        \ 'url' : url,
-        \ 'headers' : headers,
-        \ 'method' : 'GET',
-        \ 'client' : ['curl', 'wget'],
-        \ })
-    if !response.success
-        call ghpr_blame#error(printf('API request failed with status %s: %s', response.status, response))
-        return {}
-    endif
-    return json_decode(response.content)
-endfunction
-let s:GHPR.fetch_pr = function('s:_fetch_pr')
 
 function! s:_render_pr(pr) dict abort
     let b:ghpr_pr_num = a:pr.number
