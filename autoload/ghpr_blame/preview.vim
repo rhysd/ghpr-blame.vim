@@ -18,7 +18,7 @@ function! s:_open(...) dict abort
         let split = 'botright new'
     endif
     execute split
-    setlocal bufhidden=delete nobackup noswf nobuflisted buftype=nofile nonumber
+    setlocal bufhidden=delete nobackup noswf nobuflisted buftype=nofile nonumber norelativenumber
     let self.bufnr = bufnr('%')
 endfunction
 let s:PREVIEW.open = function('s:_open')
