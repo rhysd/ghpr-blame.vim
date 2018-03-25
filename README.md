@@ -45,6 +45,27 @@ Please generate and set an API token by below steps.
 5. Generated token is shown at the top of your tokens list
 6. Set it to `g:ghpr_github_auth_token` (Please be careful. The token is a credential)
 
+### for GitHub Enterprise
+
+You should also prepare the token to access. It should be different from the
+github.com's one, so you can supply them by a dict form of
+`g:ghpr_github_auth_token`.
+
+```vim
+let g:ghpr_github_auth_token = {
+        \ 'github.com': '123456abcdef',
+        \ 'github.your-company.com': 'abcdef123456',
+        \ }
+```
+
+In addition, you should set the API url for GHE by `g:ghpr_github_api_url`.
+
+```vim
+let g:ghpr_github_api_url = {
+        \ 'github.your-company.com': 'https://github.your-company.com/api/v3',
+        \ }
+```
+
 ## License
 
 ```
