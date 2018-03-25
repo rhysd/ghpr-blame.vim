@@ -2,7 +2,7 @@ let s:H = ghpr_blame#vital().import('Web.HTTP')
 
 let s:SLUG = {}
 function! ghpr_blame#slug#from_url(url) abort
-    let slug = s:SLUG
+    let slug = deepcopy(s:SLUG)
     let m = matchlist(a:url, '\v^git\@([^:]+):([^/]+/[^/]{-})%(\.git)?\n*$')
     if empty(m)
         let m = matchlist(a:url, '\v^%(git|https|ssh)://%([^@/]+\@)?([^/]+)/([^/]+/[^/]{-})%(\.git)?\n*$')
