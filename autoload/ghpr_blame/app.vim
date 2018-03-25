@@ -126,7 +126,12 @@ function! s:_show_pr_at(line) dict abort
     let num = self.blames[idx].pr
     if !has_key(self.pr_cache, num)
         echo 'Fetching pull request #' . num . '...'
-        let pr = self.slug.fetch_pr(num)
+        try
+            let pr = self.slug.fetch_pr(num)
+        catch
+            call ghpr_blame#error(printf('Failed to fetch: %s', v:exception))
+            return
+        endtry
         let self.pr_cache[num] = pr
     else
         let pr = self.pr_cache[num]

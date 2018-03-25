@@ -49,8 +49,7 @@ function! s:_fetch_pr(num) dict abort
     endif
     let url = self.api_url(a:num)
     if url ==# ''
-        call g:ghpr_blame#error(printf('unknown API url for %s', self.host))
-        return {}
+        throw printf('unknown API url for %s', self.host)
     endif
     let response = s:H.request({
                 \ 'url': url,
@@ -59,8 +58,7 @@ function! s:_fetch_pr(num) dict abort
                 \ 'client': ['curl', 'wget'],
                 \ })
     if !response.success
-        call g:ghpr_blame#error(printf('API request failed with status %s: %s', response.status, response))
-        return {}
+        throw printf('API request failed with status %s: %s', response.status, response)
     endif
     return json_decode(response.content)
 endfunction
