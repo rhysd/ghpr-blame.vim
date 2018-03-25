@@ -76,11 +76,12 @@ function! s:_start() dict abort
         return
     endif
 
-    let slug = self.extract_slug()
-    if !slug.is_valid
+    try
+        let slug = self.extract_slug()
+    catch
         call ghpr_blame#warn('Cannot get GitHub repository from')
         return
-    endif
+    endtry
     let self.slug = slug
 
     let blames = self.blame()
