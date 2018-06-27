@@ -186,7 +186,7 @@ function! s:_render_pr_nums(lnum) dict abort
         return 0
     endif
     call append(0, numbers)
-    setlocal nowrap
+    setlocal nowrap nonumber
     let width = float2nr(log10(max_num)) + 3
     execute 'vertical' 'resize' width
     execute a:lnum
